@@ -62,8 +62,9 @@ python3 -m http.server 8000
 
 ## Deploying
 
-`.github/workflows/deploy.yml` publishes the site to GitHub Pages on every push to `main`.
-You only need to set this up once: in the repository's **Settings → Pages**, set **Source** to **GitHub Actions**.
+`.github/workflows/deploy.yml` publishes the site to GitHub Pages on every push to the repository's
+default branch. You only need to set this up once: in the repository's **Settings → Pages**, set
+**Source** to **GitHub Actions**. The site then lives at `https://<user>.github.io/<repo>/`.
 
 ## How it's built
 
