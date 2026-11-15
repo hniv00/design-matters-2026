@@ -16,6 +16,7 @@ export const C = {
   pink: '#ef5a98',
   blush: '#f6b3c8',
   orange: '#f2552c',
+  red: '#e23b2e',
   marigold: '#f5a623',
   yellow: '#f7d046',
   sand: '#f3d9a4',
@@ -284,4 +285,72 @@ export function pointInPoly(pts, x, y) {
     if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
   }
   return inside;
+}
+
+/** A little bicycle, facing right, with its wheels on the ground at y = 0. */
+export function drawBike(c, color, spin = 0) {
+  c.save();
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+  for (const wx of [-15, 15]) {
+    c.beginPath();
+    c.arc(wx, -10, 10, 0, Math.PI * 2);
+    c.fillStyle = 'rgba(251,248,243,0.55)';
+    c.fill();
+    c.strokeStyle = INK;
+    c.lineWidth = 2.6;
+    c.stroke();
+    c.lineWidth = 1;
+    c.beginPath();
+    for (let k = 0; k < 3; k++) {
+      const a = spin + (k * Math.PI) / 3;
+      c.moveTo(wx + Math.cos(a) * 9, -10 + Math.sin(a) * 9);
+      c.lineTo(wx - Math.cos(a) * 9, -10 - Math.sin(a) * 9);
+    }
+    c.stroke();
+  }
+  c.strokeStyle = crayon(c, color, 0.12);
+  c.lineWidth = 3.6;
+  c.beginPath();
+  c.moveTo(-15, -10);
+  c.lineTo(-4, -24);
+  c.lineTo(11, -24);
+  c.lineTo(15, -10);
+  c.moveTo(-4, -24);
+  c.lineTo(0, -10);
+  c.lineTo(11, -24);
+  c.moveTo(0, -10);
+  c.lineTo(-15, -10);
+  c.stroke();
+  c.strokeStyle = INK;
+  c.lineWidth = 2.6;
+  c.beginPath();
+  c.moveTo(-4, -24);
+  c.lineTo(-6, -29);
+  c.moveTo(-11, -30);
+  c.lineTo(-2, -30);
+  c.moveTo(11, -24);
+  c.lineTo(13, -32);
+  c.lineTo(9, -34);
+  c.stroke();
+  c.beginPath();
+  c.rect(14, -35, 12, 9);
+  c.fillStyle = C.marigold;
+  c.fill();
+  c.lineWidth = 2;
+  c.stroke();
+  c.fillStyle = C.pink;
+  c.beginPath();
+  c.arc(20, -38, 3.2, 0, Math.PI * 2);
+  c.fill();
+  c.restore();
+}
+
+/** Heart path centred on x, y. */
+export function heartPath(c, x, y, s) {
+  c.beginPath();
+  c.moveTo(x, y + s * 0.4);
+  c.bezierCurveTo(x - s, y - s * 0.25, x - s * 0.5, y - s, x, y - s * 0.45);
+  c.bezierCurveTo(x + s * 0.5, y - s, x + s, y - s * 0.25, x, y + s * 0.4);
+  c.closePath();
 }

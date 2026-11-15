@@ -1,6 +1,6 @@
-import { site, places } from './content.js';
+import { site, places, curiosities } from './content.js';
 import { WORLD, buildWorld } from './world.js';
-import { C, INK, PAPER, crayon } from './sketch.js';
+import { C, INK, PAPER, crayon, drawBike, heartPath } from './sketch.js';
 
 const $ = (s) => document.querySelector(s);
 const canvas = $('#world');
@@ -11,16 +11,22 @@ const panelTitle = $('#panel-title');
 const panelBody = $('#panel-body');
 const hint = $('#hint');
 const progressEl = $('#progress');
+const stampsBtn = $('#stamps');
 const menu = $('#menu');
 const menuList = $('#menu-list');
 const toast = $('#toast');
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const SPEED = 250;
+const BIKE_BOOST = 1.75;
 const RADIUS = 12;
 const REACH = 64;
 const LABEL_FONT = '700 26px Gaegu, "Comic Sans MS", cursive';
 const BUBBLE_FONT = '700 20px Gaegu, "Comic Sans MS", cursive';
+const SPEECH_FONT = '700 19px Gaegu, "Comic Sans MS", cursive';
+
+const things = [...places, ...curiosities];
+const isPlace = (t) => places.includes(t);
 
 // ── Saved progress (per browser; the site works fine without it) ──
 const STORE = 'setouchi-world:visited';
@@ -44,22 +50,28 @@ let dpr = 1;
 let zoom = 1;
 let vw = 0;
 let vh = 0;
+let clock = 0;
 const cam = { x: 0, y: 0 };
 const keys = new Set();
 let target = null;
-let autoOpen = null;
+let autoUse = null;
 let near = null;
 let bubble = null;
+let speech = null;
 let stuck = 0;
 let side = 1;
 let bestDist = Infinity;
 let touchy = matchMedia('(pointer: coarse)').matches;
-let celebrate = false;
+let pendingToast = null;
+const particles = [];
+const gulls = [];
 
 // ── Chrome ──
 $('#brand-name').textContent = site.name;
 $('#brand-tagline').textContent = site.tagline;
 document.title = `${site.name} · ${site.tagline}`;
+
+const countOf = (list) => list.filter((t) => visited.has(t.id)).length;
 
 function renderMenu() {
   menuList.innerHTML = '';
@@ -67,7 +79,7 @@ function renderMenu() {
     const li = document.createElement('li');
     const b = document.createElement('button');
     b.type = 'button';
-    b.innerHTML = `<span>${p.title}</span><small>${p.island || ''}${visited.has(p.id) ? ' ✓' : ''}</small>`;
+    b.innerHTML = `<span>${esc(p.title)}</span><small>${esc(p.island)}${visited.has(p.id) ? ' ✓' : ''}</small>`;
     b.addEventListener('click', () => {
       menu.open = false;
       player.x = p.door.x;
@@ -78,13 +90,20 @@ function renderMenu() {
     li.append(b);
     menuList.append(li);
   }
-  const found = places.filter((p) => visited.has(p.id)).length;
-  progressEl.textContent = `${found}/${places.length} found`;
+  progressEl.textContent = `${countOf(places)}/${places.length} found`;
+  stampsBtn.textContent = `Stamps ${countOf(curiosities)}/${curiosities.length}`;
 }
 
 document.addEventListener('pointerdown', (e) => {
   if (menu.open && !menu.contains(e.target)) menu.open = false;
 });
+
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.hidden = false;
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => (toast.hidden = true), 6000);
+}
 
 // ── Panel ──
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -111,35 +130,112 @@ function renderBody(p) {
   return html;
 }
 
-function openPlace(p) {
+function showPanel(kicker, title, html, accent) {
   target = null;
-  autoOpen = null;
+  autoUse = null;
+  speech = null;
   keys.clear();
-  panelKicker.textContent = p.island || '';
-  panelTitle.textContent = p.title;
-  panelBody.innerHTML = renderBody(p);
-  dialog.style.setProperty('--accent', p.color || C.pink);
+  panelKicker.textContent = kicker || '';
+  panelTitle.textContent = title;
+  panelBody.innerHTML = html;
+  dialog.style.setProperty('--accent', accent || C.pink);
   if (!dialog.open) dialog.showModal();
-  panelBody.scrollTop = 0;
-  if (!visited.has(p.id)) {
-    visited.add(p.id);
-    saveVisited();
-    if (places.every((q) => visited.has(q.id))) celebrate = true;
-  }
-  renderMenu();
+  dialog.scrollTop = 0;
 }
+
+function collect(id) {
+  if (visited.has(id)) return false;
+  visited.add(id);
+  saveVisited();
+  renderMenu();
+  return true;
+}
+
+function openPlace(p) {
+  showPanel(p.island, p.title, renderBody(p), p.color);
+  if (collect(p.id) && countOf(places) === places.length) {
+    pendingToast = 'You found every island. Thanks for sailing by!';
+  }
+}
+
+function stampImage(q) {
+  if (!q.stampSrc) q.stampSrc = q.sprite.img.toDataURL();
+  return q.stampSrc;
+}
+
+function openStamps() {
+  const got = countOf(curiosities);
+  const items = curiosities
+    .map((q, i) => {
+      const has = visited.has(q.id);
+      return `
+        <li class="stamp${has ? '' : ' missing'}" style="--tilt:${((i * 37) % 11) - 5}deg">
+          <div class="stamp-ring"><img src="${stampImage(q)}" alt=""></div>
+          <p>${has ? esc(q.name) : '???'}<small>${esc(q.island)}</small></p>
+        </li>`;
+    })
+    .join('');
+  showPanel(
+    'Collected on your travels',
+    'Stamp book',
+    `<p>Little things are hidden all over the islands. Walk up to anything curious and press <kbd>E</kbd>
+       (or tap it) to collect its stamp. <strong>${got} of ${curiosities.length}</strong> so far.</p>
+     <ul class="stamps">${items}</ul>`,
+    C.pink,
+  );
+}
+stampsBtn.addEventListener('click', openStamps);
 
 dialog.addEventListener('click', (e) => {
   if (e.target === dialog) dialog.close();
 });
 dialog.addEventListener('close', () => {
   canvas.focus({ preventScroll: true });
-  if (celebrate) {
-    celebrate = false;
-    toast.hidden = false;
-    setTimeout(() => (toast.hidden = true), 6000);
+  if (pendingToast) {
+    showToast(pendingToast);
+    pendingToast = null;
   }
 });
+
+// ── Poking at curiosities ──
+function burst(x, y, kind) {
+  if (reduced) return;
+  for (let i = 0; i < 9; i++) {
+    particles.push({
+      x: x + (Math.random() - 0.5) * 30,
+      y,
+      vx: (Math.random() - 0.5) * 70,
+      vy: -40 - Math.random() * 50,
+      life: 1,
+      size: 6 + Math.random() * 5,
+      kind,
+      color: [C.pink, C.yellow, C.orange, C.lavender][i % 4],
+    });
+  }
+}
+
+function poke(q) {
+  target = null;
+  autoUse = null;
+  let text;
+  if (q.action === 'bike') {
+    player.bike = !player.bike;
+    text = player.bike ? q.rentText : q.returnText;
+  } else {
+    q.lineIndex = ((q.lineIndex ?? -1) + 1) % q.lines.length;
+    text = q.lines[q.lineIndex];
+  }
+  speech = { thing: q, text, until: clock + 3 + text.length * 0.045 };
+  burst(q.x, q.topY + 20, q.burst || 'sparkles');
+  if (collect(q.id)) {
+    stampsBtn.classList.remove('bump');
+    void stampsBtn.offsetWidth;
+    stampsBtn.classList.add('bump');
+    if (countOf(curiosities) === curiosities.length) showToast('Stamp book complete! You are now an honorary islander.');
+  }
+}
+
+const interact = (t) => (isPlace(t) ? openPlace(t) : poke(t));
 
 // ── Input ──
 const KEYMAP = {
@@ -161,7 +257,7 @@ addEventListener('keydown', (e) => {
   const inChrome = e.target.closest?.('.hud');
   if (!inChrome && near && ['e', 'E', 'Enter', ' '].includes(e.key)) {
     e.preventDefault();
-    openPlace(near);
+    if (!e.repeat) interact(near);
   }
 });
 addEventListener('keyup', (e) => {
@@ -177,19 +273,16 @@ canvas.addEventListener('pointerdown', (e) => {
   touchy = e.pointerType !== 'mouse';
   canvas.focus({ preventScroll: true });
   const pt = toWorld(e.clientX, e.clientY);
-  if (near && inBox(pt, bubble, 14)) return openPlace(near);
-  const hit = places
-    .filter((p) => inBox(pt, p.bounds))
-    .sort((a, b) => b.y - a.y)[0];
+  if (near && inBox(pt, bubble, 14)) return interact(near);
+  const hit = things.filter((t) => inBox(pt, t.bounds)).sort((a, b) => b.y - a.y)[0];
+  bestDist = Infinity;
   if (hit) {
-    if (hit === near) return openPlace(hit);
+    if (hit === near) return interact(hit);
     target = { ...hit.door };
-    autoOpen = hit;
-    bestDist = Infinity;
+    autoUse = hit;
   } else {
     target = pt;
-    autoOpen = null;
-    bestDist = Infinity;
+    autoUse = null;
   }
 });
 
@@ -204,21 +297,22 @@ function blocked(x, y) {
   return false;
 }
 
-function update(dt) {
+function updatePlayer(dt) {
   let dx = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0);
   let dy = (keys.has('down') ? 1 : 0) - (keys.has('up') ? 1 : 0);
   let maxStep = Infinity;
 
   if (dx || dy) {
     target = null;
-    autoOpen = null;
+    autoUse = null;
   } else if (target) {
     const tx = target.x - player.x;
     const ty = target.y - player.y;
     const d = Math.hypot(tx, ty);
     if (d < 3) {
       target = null;
-      if (autoOpen) openPlace(autoOpen);
+      if (autoUse) interact(autoUse);
+      autoUse = null;
     } else {
       dx = tx / d;
       dy = ty / d;
@@ -227,58 +321,68 @@ function update(dt) {
   }
 
   player.moving = !!(dx || dy);
-  if (player.moving) {
-    const len = Math.hypot(dx, dy);
-    dx /= len;
-    dy /= len;
-    const step = Math.min(SPEED * (player.onWater ? 0.85 : 1) * dt, maxStep);
-    const ox = player.x;
-    const oy = player.y;
-    if (target) {
-      // Walk towards the target, veering around anything in the way.
-      const base = Math.atan2(dy, dx);
-      for (const off of [0, 0.5, 1, 1.5, 2].flatMap((o) => (o ? [o * side, -o * side] : [0]))) {
-        const ax = Math.cos(base + off);
-        const ay = Math.sin(base + off);
-        if (!blocked(player.x + ax * step, player.y + ay * step)) {
-          player.x += ax * step;
-          player.y += ay * step;
-          if (off) side = Math.sign(off);
-          dx = ax;
-          break;
-        }
-      }
-      const d = Math.hypot(target.x - player.x, target.y - player.y);
-      if (d < bestDist - 1) {
-        bestDist = d;
-        stuck = 0;
-      } else stuck += dt;
-    } else {
-      if (!blocked(player.x + dx * step, player.y)) player.x += dx * step;
-      if (!blocked(player.x, player.y + dy * step)) player.y += dy * step;
-      stuck = 0;
-    }
-    if (Math.abs(dx) > 0.2) player.flip = dx < 0;
-    if (Math.hypot(player.x - ox, player.y - oy) < step * 0.1 && target) stuck += 1;
+  if (!player.moving) return;
 
-    if (stuck > 1.2 && target) {
-      if (autoOpen && Math.hypot(player.x - autoOpen.door.x, player.y - autoOpen.door.y) < REACH * 1.5) openPlace(autoOpen);
-      target = null;
-      autoOpen = null;
-      stuck = 0;
+  const len = Math.hypot(dx, dy);
+  dx /= len;
+  dy /= len;
+  const boost = player.onWater ? 0.85 : player.bike ? BIKE_BOOST : 1;
+  const step = Math.min(SPEED * boost * dt, maxStep);
+  const ox = player.x;
+  const oy = player.y;
+  if (target) {
+    // Walk towards the target, veering around anything in the way.
+    const base = Math.atan2(dy, dx);
+    for (const off of [0, 0.5, 1, 1.5, 2].flatMap((o) => (o ? [o * side, -o * side] : [0]))) {
+      const ax = Math.cos(base + off);
+      const ay = Math.sin(base + off);
+      if (!blocked(player.x + ax * step, player.y + ay * step)) {
+        player.x += ax * step;
+        player.y += ay * step;
+        if (off) side = Math.sign(off);
+        dx = ax;
+        break;
+      }
     }
-    hint.classList.add('hidden');
+    const d = Math.hypot(target.x - player.x, target.y - player.y);
+    if (d < bestDist - 1) {
+      bestDist = d;
+      stuck = 0;
+    } else stuck += dt;
+  } else {
+    if (!blocked(player.x + dx * step, player.y)) player.x += dx * step;
+    if (!blocked(player.x, player.y + dy * step)) player.y += dy * step;
+    stuck = 0;
   }
+  if (Math.abs(dx) > 0.2) player.flip = dx < 0;
+  const moved = Math.hypot(player.x - ox, player.y - oy);
+  player.dist += moved;
+  if (moved < step * 0.1 && target) stuck += 1;
+
+  if (stuck > 1.2 && target) {
+    if (autoUse && Math.hypot(player.x - autoUse.door.x, player.y - autoUse.door.y) < REACH * 1.5) interact(autoUse);
+    target = null;
+    autoUse = null;
+    stuck = 0;
+  }
+  hint.classList.add('hidden');
+}
+
+function update(dt) {
+  updatePlayer(dt);
   player.onWater = !world.isLand(player.x, player.y);
 
   near = null;
   let best = REACH;
-  for (const p of places) {
-    const d = Math.hypot(player.x - p.door.x, player.y - p.door.y);
+  for (const t of things) {
+    const d = Math.hypot(player.x - t.door.x, player.y - t.door.y);
     if (d < best) {
       best = d;
-      near = p;
+      near = t;
     }
+  }
+  if (speech && (clock > speech.until || Math.hypot(player.x - speech.thing.door.x, player.y - speech.thing.door.y) > REACH * 3)) {
+    speech = null;
   }
 
   // Ferry
@@ -299,6 +403,26 @@ function update(dt) {
   f.x = a[0] + (b[0] - a[0]) * k;
   f.y = a[1] + (b[1] - a[1]) * k;
   f.flip = (b[0] - a[0]) * f.dir < 0;
+}
+
+function updateAmbient(dt) {
+  if (reduced) return;
+  for (const g of gulls) {
+    g.x += g.v * dt;
+    g.y += Math.sin(clock * 0.6 + g.phase) * 6 * dt;
+    if (g.x > WORLD.w + 120) {
+      g.x = -120;
+      g.y = 80 + Math.random() * (WORLD.h - 300);
+    }
+  }
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.vx *= 0.97;
+    p.life -= dt * 0.8;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
 }
 
 // ── Camera ──
@@ -348,10 +472,11 @@ function ell(c, x, y, rx, ry) {
   c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
 }
 
-// A little round bird in a pink beanie. Faces right; flipped when walking left.
+// A little round bird in a pink beanie. Faces right; flipped when moving left.
 function drawBird(c, p, t) {
   const moving = p.moving && !reduced;
-  const hop = moving && !p.onWater ? Math.abs(Math.sin(t * 11)) * 4 : 0;
+  const riding = p.bike && !p.onWater;
+  const hop = moving && !p.onWater && !riding ? Math.abs(Math.sin(t * 11)) * 4 : 0;
   c.save();
   c.translate(p.x, p.y);
   c.lineJoin = 'round';
@@ -368,7 +493,7 @@ function drawBird(c, p, t) {
     c.rotate(reduced ? 0 : Math.sin(t * 2.4) * 0.05);
   } else {
     c.fillStyle = 'rgba(29,27,30,0.15)';
-    ell(c, 0, 0, 15, 5);
+    ell(c, 0, 0, riding ? 28 : 15, 5);
     c.fill();
   }
   if (p.flip) c.scale(-1, 1);
@@ -376,7 +501,14 @@ function drawBird(c, p, t) {
   c.strokeStyle = INK;
   c.lineWidth = 2.4;
   if (p.onWater) {
-    // Boat
+    // Boat (with the rented bike tucked in the back)
+    if (p.bike) {
+      c.save();
+      c.translate(-14, -19);
+      c.scale(0.6, 0.6);
+      drawBike(c, C.cobalt, 0);
+      c.restore();
+    }
     c.beginPath();
     c.moveTo(-32, -16);
     c.lineTo(32, -16);
@@ -384,6 +516,8 @@ function drawBird(c, p, t) {
     c.lineTo(-24, 2);
     c.closePath();
     paint(c, C.orange);
+    c.strokeStyle = INK;
+    c.lineWidth = 2.4;
     c.stroke();
     c.strokeStyle = C.white;
     c.lineWidth = 3;
@@ -393,8 +527,21 @@ function drawBird(c, p, t) {
     c.stroke();
     c.strokeStyle = INK;
     c.lineWidth = 2.4;
+    c.translate(0, -12);
+  } else if (riding) {
+    drawBike(c, C.cobalt, p.dist / 10);
+    // Pedalling legs
+    const a = reduced ? 0 : p.dist / 10;
+    c.strokeStyle = C.orange;
+    c.beginPath();
+    c.moveTo(-3, -30);
+    c.lineTo(Math.cos(a) * 5, -10 + Math.sin(a) * 5);
+    c.moveTo(1, -30);
+    c.lineTo(-Math.cos(a) * 5, -10 - Math.sin(a) * 5);
+    c.stroke();
+    c.strokeStyle = INK;
+    c.translate(-4, -26);
   } else {
-    // Legs
     const step = moving ? Math.sin(t * 22) * 3 : 0;
     c.strokeStyle = C.orange;
     c.beginPath();
@@ -404,9 +551,9 @@ function drawBird(c, p, t) {
     c.lineTo(5 - step, 0);
     c.stroke();
     c.strokeStyle = INK;
+    c.translate(0, -6 - hop);
   }
 
-  c.translate(0, (p.onWater ? -12 : -6) - hop);
   // Tail
   c.beginPath();
   c.moveTo(-14, -14);
@@ -430,7 +577,6 @@ function drawBird(c, p, t) {
   c.beginPath();
   for (let i = 0; i < 3; i++) c.arc(-9 + i * 5, -15, 2.4, Math.PI, 0);
   c.stroke();
-  c.lineWidth = 2.4;
   // Neck bands
   c.lineWidth = 4;
   c.strokeStyle = crayon(c, C.turquoise, 0.2);
@@ -486,18 +632,88 @@ function drawBird(c, p, t) {
   c.restore();
 }
 
-function sparkle(c, x, y, r) {
+function sparkle(c, x, y, r, color = C.yellow) {
   c.beginPath();
   c.moveTo(x, y - r);
   c.quadraticCurveTo(x, y, x + r, y);
   c.quadraticCurveTo(x, y, x, y + r);
   c.quadraticCurveTo(x, y, x - r, y);
   c.quadraticCurveTo(x, y, x, y - r);
-  c.fillStyle = C.yellow;
+  c.fillStyle = color;
   c.fill();
   c.strokeStyle = INK;
   c.lineWidth = 1.6;
   c.stroke();
+}
+
+function drawGull(c, g, t) {
+  const flap = reduced ? 0 : Math.sin(t * 7 + g.phase) * 4;
+  c.save();
+  c.fillStyle = 'rgba(29,27,30,0.08)';
+  ell(c, g.x + 30, g.y + 120, 10, 3);
+  c.fill();
+  c.translate(g.x, g.y);
+  c.lineCap = 'round';
+  c.lineJoin = 'round';
+  c.beginPath();
+  c.moveTo(-12, 0);
+  c.quadraticCurveTo(-6, -8 - flap, 0, 0);
+  c.quadraticCurveTo(6, -8 - flap, 12, 0);
+  c.strokeStyle = INK;
+  c.lineWidth = 4.5;
+  c.stroke();
+  c.strokeStyle = C.white;
+  c.lineWidth = 2.2;
+  c.stroke();
+  c.restore();
+}
+
+function wrap(c, text, maxW) {
+  const words = text.split(' ');
+  const lines = [];
+  let cur = '';
+  for (const w of words) {
+    const next = cur ? `${cur} ${w}` : w;
+    if (c.measureText(next).width > maxW && cur) {
+      lines.push(cur);
+      cur = w;
+    } else cur = next;
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+function drawSpeech(c, s) {
+  c.font = SPEECH_FONT;
+  const lines = wrap(c, s.text, 230);
+  const lh = 22;
+  const w = Math.max(...lines.map((l) => c.measureText(l).width)) + 28;
+  const h = lines.length * lh + 18;
+  const x = Math.max(cam.x + 8, Math.min(s.thing.x - w / 2, cam.x + vw / zoom - w - 8));
+  const y = Math.max(cam.y + 70, s.thing.topY - h - 18);
+  const tipX = Math.max(x + 18, Math.min(s.thing.x, x + w - 18));
+  c.save();
+  c.beginPath();
+  c.roundRect(x, y, w, h, 16);
+  c.moveTo(tipX - 9, y + h);
+  c.lineTo(tipX, y + h + 13);
+  c.lineTo(tipX + 9, y + h);
+  c.fillStyle = C.white;
+  c.fill();
+  c.strokeStyle = INK;
+  c.lineWidth = 2.6;
+  c.stroke();
+  c.beginPath();
+  c.moveTo(tipX - 8, y + h);
+  c.lineTo(tipX + 8, y + h);
+  c.strokeStyle = C.white;
+  c.lineWidth = 3;
+  c.stroke();
+  c.fillStyle = INK;
+  c.textAlign = 'left';
+  c.textBaseline = 'top';
+  lines.forEach((l, i) => c.fillText(l, x + 14, y + 10 + i * lh));
+  c.restore();
 }
 
 function pill(c, text, x, y, font) {
@@ -518,6 +734,13 @@ function pill(c, text, x, y, font) {
   c.textBaseline = 'middle';
   c.fillText(text, x, by + h / 2 + 1);
   return { x: bx, y: by, w, h };
+}
+
+function promptFor(t) {
+  const key = touchy ? 'Tap' : 'E';
+  if (isPlace(t)) return touchy ? `Tap to enter ${t.title}` : `Press E · ${t.title}`;
+  if (t.action === 'bike') return `${key} · ${player.bike ? 'Return the bike' : 'Rent a bike'}`;
+  return `${key} · ${t.name}`;
 }
 
 function draw(t) {
@@ -576,9 +799,28 @@ function draw(t) {
     }
   }
 
+  for (const g of gulls) drawGull(ctx, g, t);
+
+  for (const p of particles) {
+    ctx.globalAlpha = Math.max(0, Math.min(1, p.life * 1.5));
+    if (p.kind === 'hearts') {
+      heartPath(ctx, p.x, p.y, p.size);
+      ctx.fillStyle = p.color === C.yellow ? C.pink : p.color;
+      ctx.fill();
+      ctx.strokeStyle = INK;
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+    } else {
+      sparkle(ctx, p.x, p.y, p.size * 0.8, p.color);
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  if (speech) drawSpeech(ctx, speech);
+
   bubble = null;
-  if (near && !dialog.open) {
-    bubble = pill(ctx, touchy ? `Tap to enter ${near.title}` : `Press E · ${near.title}`, player.x, player.y - (player.onWater ? 78 : 70), BUBBLE_FONT);
+  if (near && !dialog.open && speech?.thing !== near) {
+    bubble = pill(ctx, promptFor(near), player.x, player.y - (player.onWater ? 78 : player.bike ? 96 : 70), BUBBLE_FONT);
   }
 }
 
@@ -586,7 +828,9 @@ let last = performance.now();
 function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
+  clock += dt;
   if (!dialog.open) update(dt);
+  updateAmbient(dt);
   updateCamera(dt);
   draw(now / 1000);
   requestAnimationFrame(loop);
@@ -601,12 +845,14 @@ async function start() {
     ]);
   } catch {}
   resize();
-  world = buildWorld(places, Math.min(devicePixelRatio || 1, 1.5));
-  player = { ...world.spawn, flip: false, moving: false, onWater: false };
+  world = buildWorld(places, curiosities, Math.min(devicePixelRatio || 1, 1.5));
+  player = { ...world.spawn, flip: false, moving: false, onWater: false, bike: false, dist: 0 };
+  for (let i = 0; i < 4; i++) {
+    gulls.push({ x: Math.random() * WORLD.w, y: 80 + Math.random() * (WORLD.h - 300), v: 35 + Math.random() * 30, phase: Math.random() * 6 });
+  }
   snapCamera();
   renderMenu();
-  document.body.classList.add('ready');
-  if (touchy) hint.textContent = 'Tap anywhere to walk · tap a building to go in';
+  if (touchy) hint.textContent = 'Tap anywhere to walk · tap things to poke them';
   requestAnimationFrame(loop);
   if (!visited.has(places[0].id)) openPlace(places[0]);
 }

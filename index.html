@@ -29,7 +29,8 @@
         <small id="brand-tagline"></small>
       </a>
       <div class="hud-right">
-        <span class="paper chip" id="progress" aria-live="polite"></span>
+        <span class="paper chip progress" id="progress" aria-live="polite"></span>
+        <button type="button" class="paper chip stamps-btn" id="stamps" aria-live="polite">Stamps</button>
         <details class="menu" id="menu">
           <summary class="paper chip">Map</summary>
           <ul class="paper" id="menu-list"></ul>
@@ -39,7 +40,7 @@
 
     <main>
       <canvas id="world" tabindex="0" aria-label="A hand-drawn map of islands. Use the arrow keys to walk, or the Map menu to visit each place."></canvas>
-      <p class="paper chip hint" id="hint">Arrow keys or WASD to walk · E to go inside · or click anywhere</p>
+      <p class="paper chip hint" id="hint">Arrow keys or WASD to walk · E to go in or poke things · or click anywhere</p>
       <p class="paper chip toast" id="toast" role="status" hidden>You found every island. Thanks for sailing by!</p>
       <noscript>
         <p class="paper noscript">This portfolio is a little explorable world and needs JavaScript to run.</p>

@@ -6,6 +6,7 @@
 
 import {
   C, INK, PAPER, mulberry32, shape, line, rect, ellipse, curve, scribble, hatch, crayon, trace, pointInPoly,
+  drawBike, heartPath,
 } from './sketch.js';
 
 export const WORLD = { w: 2000, h: 1500 };
@@ -33,7 +34,8 @@ export const FERRY_ROUTES = [
 const FOOT = {
   sign: [90, 14], museum: [220, 44], drop: [220, 40], chimney: [150, 40], terminal: [96, 30],
   pumpkin: [64, 18], pine: [16, 10], olive: [14, 8], house: [60, 20], torii: [80, 10],
-  lighthouse: [26, 14],
+  lighthouse: [26, 14], redPumpkin: [76, 20], bikes: [96, 22], vending: [40, 12], cat: [18, 6],
+  heartHut: [86, 22], oni: [30, 12], bigOlive: [22, 10],
 };
 
 // Sprite canvas box: [width, height, anchorX, anchorY] — anchor is the front-centre base.
@@ -41,7 +43,9 @@ const BOX = {
   sign: [130, 120, 65, 104], museum: [300, 170, 150, 150], drop: [270, 110, 135, 95],
   chimney: [200, 240, 100, 216], terminal: [290, 150, 145, 128], pumpkin: [110, 100, 55, 88],
   pine: [110, 125, 55, 112], olive: [90, 90, 45, 82], house: [90, 85, 45, 72], torii: [130, 120, 65, 106],
-  lighthouse: [60, 150, 30, 136], ferry: [150, 90, 75, 70],
+  lighthouse: [60, 150, 30, 136], ferry: [150, 90, 75, 70], redPumpkin: [120, 110, 60, 98],
+  bikes: [200, 125, 100, 112], vending: [60, 100, 30, 90], cat: [60, 50, 28, 44], heartHut: [120, 105, 60, 94],
+  oni: [80, 95, 38, 86], bigOlive: [150, 145, 75, 132],
 };
 
 const shadow = (ctx, rx, ry) => {
@@ -59,6 +63,20 @@ const dot = (ctx, x, y, r, color) => {
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
 };
+
+function dottedLobes(ctx, rng, lobes, color) {
+  for (const [x, y, rx, ry] of lobes) {
+    shape(ctx, rng, ellipse(x, y, rx, ry, rng, 0.04), { fill: color, holes: 0.12 });
+    for (let row = -2; row <= 2; row++) {
+      const yy = y + row * ry * 0.36;
+      const span = rx * Math.sqrt(1 - (row / 2.8) ** 2) * 0.62;
+      const n = Math.max(1, Math.round(span / 6));
+      for (let i = 0; i <= n; i++) {
+        dot(ctx, x - span + (2 * span * i) / n, yy, 3.2 - Math.abs(row) * 0.5 + rng() * 0.6, INK);
+      }
+    }
+  }
+}
 
 // ── Sprite painters (origin = front-centre base, up is negative y) ──
 
@@ -162,20 +180,155 @@ const PAINT = {
   // Big yellow pumpkin covered in black dots.
   pumpkin(ctx, rng) {
     shadow(ctx, 44, 9);
-    const lobes = [[-20, -34, 22, 32], [20, -34, 22, 32], [0, -36, 24, 35]];
-    for (const [x, y, rx, ry] of lobes) {
-      shape(ctx, rng, ellipse(x, y, rx, ry, rng, 0.04), { fill: C.yellow, holes: 0.12 });
-      for (let row = -2; row <= 2; row++) {
-        const yy = y + row * ry * 0.36;
-        const span = rx * Math.sqrt(1 - (row / 2.8) ** 2) * 0.62;
-        const n = Math.max(1, Math.round(span / 6));
-        for (let i = 0; i <= n; i++) {
-          const xx = x - span + (2 * span * i) / n;
-          dot(ctx, xx, yy, 3.2 - Math.abs(row) * 0.5 + rng() * 0.6, INK);
-        }
+    dottedLobes(ctx, rng, [[-20, -34, 22, 32], [20, -34, 22, 32], [0, -36, 24, 35]], C.yellow);
+    shape(ctx, rng, rect(-4, -78, 8, 10), { fill: C.green });
+  },
+
+  // Red pumpkin with holes you can peek into.
+  redPumpkin(ctx, rng) {
+    shadow(ctx, 52, 10);
+    dottedLobes(ctx, rng, [[-25, -40, 27, 38], [25, -40, 27, 38], [0, -42, 29, 42]], C.red);
+    for (const [x, y, rx, ry] of [[-18, -44, 8, 11], [16, -56, 6, 8], [6, -18, 9, 7]]) {
+      shape(ctx, rng, ellipse(x, y, rx, ry, rng, 0.15), { fill: INK, base: INK, passes: 1 });
+    }
+    shape(ctx, rng, rect(-5, -94, 10, 12), { fill: INK, base: INK });
+  },
+
+  // Bike rental kiosk with a striped awning.
+  bikes(ctx, rng) {
+    shadow(ctx, 92, 10);
+    shape(ctx, rng, rect(-44, -64, 88, 64), { fill: C.white });
+    shape(ctx, rng, rect(-30, -50, 60, 22), { fill: C.sky });
+    shape(ctx, rng, rect(-12, -26, 24, 26), { fill: C.bark });
+    for (let x = -50; x <= 50; x += 20) shape(ctx, rng, ellipse(x, -64, 10, 7, rng), { fill: C.pink, width: 2, passes: 1 });
+    const aw = [[-56, -64], [56, -64], [46, -84], [-46, -84]];
+    shape(ctx, rng, aw, { fill: C.pink });
+    ctx.save();
+    trace(ctx, aw);
+    ctx.clip();
+    for (let x = -60; x <= 60; x += 20) line(ctx, rng, [[x, -86], [x * 1.15, -62]], { stroke: C.white, width: 6 });
+    ctx.restore();
+    shape(ctx, rng, rect(-34, -110, 68, 26), { fill: C.yellow });
+    ctx.fillStyle = INK;
+    ctx.font = '700 19px Gaegu, "Comic Sans MS", cursive';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('BIKES', 0, -96);
+    ctx.save();
+    ctx.translate(-70, 0);
+    drawBike(ctx, C.cobalt, 0.4);
+    ctx.restore();
+    ctx.save();
+    ctx.translate(72, 0);
+    ctx.scale(-1, 1);
+    drawBike(ctx, C.orange, 1.1);
+    ctx.restore();
+  },
+
+  vending(ctx, rng) {
+    shadow(ctx, 26, 6);
+    shape(ctx, rng, rect(-21, -82, 42, 82), { fill: C.cobalt });
+    shape(ctx, rng, rect(-15, -76, 30, 36), { fill: C.white, passes: 1 });
+    const cans = [C.pink, C.orange, C.yellow, C.green];
+    for (let r = 0; r < 3; r++) {
+      for (let k = 0; k < 4; k++) {
+        ctx.fillStyle = crayon(ctx, cans[(r + k) % 4], 0.1);
+        ctx.fillRect(-12 + k * 6.5, -72 + r * 11, 4.5, 8);
       }
     }
-    shape(ctx, rng, rect(-4, -78, 8, 10), { fill: C.green });
+    for (let k = 0; k < 4; k++) {
+      ctx.fillStyle = C.red;
+      ctx.beginPath();
+      ctx.arc(-10 + k * 6.5, -34, 1.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    shape(ctx, rng, rect(-13, -22, 26, 9), { fill: INK, base: INK, passes: 1 });
+  },
+
+  cat(ctx, rng, color) {
+    const fur = color || C.marigold;
+    shadow(ctx, 15, 4);
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 6;
+    trace(ctx, [[8, -5], [19, -8], [18, -20], [14, -24]], false);
+    ctx.stroke();
+    ctx.strokeStyle = crayon(ctx, fur, 0.1);
+    ctx.lineWidth = 3.4;
+    ctx.stroke();
+    ctx.restore();
+    shape(ctx, rng, ellipse(1, -11, 12, 11, rng), { fill: fur, width: 2.2, passes: 1, amp: 1 });
+    shape(ctx, rng, [[-10, -27], [-9, -38], [-3, -32]], { fill: fur, width: 2, passes: 1, amp: 0.8 });
+    shape(ctx, rng, [[1, -32], [6, -38], [7, -27]], { fill: fur, width: 2, passes: 1, amp: 0.8 });
+    shape(ctx, rng, ellipse(-2, -25, 10, 8.5, rng), { fill: fur, width: 2.2, passes: 1, amp: 1 });
+    dot(ctx, -5.5, -26, 1.5, INK);
+    dot(ctx, 1.5, -26, 1.5, INK);
+    dot(ctx, -2, -23, 1.4, C.pink);
+    dot(ctx, -8, -22, 2, C.blush);
+    dot(ctx, 4, -22, 2, C.blush);
+  },
+
+  // A small dark hut that keeps recorded heartbeats.
+  heartHut(ctx, rng) {
+    shadow(ctx, 56, 8);
+    const wall = rect(-42, -56, 84, 56);
+    shape(ctx, rng, wall, { fill: '#3b3035' });
+    hatch(ctx, rng, wall, C.grey, { spacing: 7, slant: 0, alpha: 0.35, width: 1.4 });
+    shape(ctx, rng, [[-50, -52], [0, -84], [50, -52]], { fill: '#2a2326' });
+    shape(ctx, rng, rect(-11, -26, 22, 26), { fill: C.white, passes: 1 });
+    ctx.save();
+    heartPath(ctx, 0, -40, 11);
+    ctx.fillStyle = C.red;
+    ctx.fill();
+    ctx.strokeStyle = C.pink;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+  },
+
+  // Megijima is said to be the ogre island. This one just waves.
+  oni(ctx, rng) {
+    shadow(ctx, 22, 5);
+    shape(ctx, rng, rect(-11, -16, 8, 16), { fill: C.red, width: 2, passes: 1 });
+    shape(ctx, rng, rect(3, -16, 8, 16), { fill: C.red, width: 2, passes: 1 });
+    const pants = rect(-14, -30, 28, 15);
+    shape(ctx, rng, pants, { fill: C.yellow, width: 2.2 });
+    hatch(ctx, rng, pants, INK, { spacing: 6, slant: 0.2, alpha: 0.8, width: 2 });
+    ctx.save();
+    ctx.lineCap = 'round';
+    for (const [w, col] of [[8, INK], [5, C.red]]) {
+      ctx.strokeStyle = col;
+      ctx.lineWidth = w;
+      ctx.beginPath();
+      ctx.moveTo(11, -44);
+      ctx.lineTo(23, -60);
+      ctx.stroke();
+    }
+    ctx.restore();
+    shape(ctx, rng, ellipse(0, -42, 15, 15, rng), { fill: C.red, width: 2.4 });
+    shape(ctx, rng, [[-10, -70], [-8, -82], [-3, -72]], { fill: C.yellow, width: 2, passes: 1, amp: 0.6 });
+    shape(ctx, rng, [[3, -72], [8, -82], [10, -70]], { fill: C.yellow, width: 2, passes: 1, amp: 0.6 });
+    shape(ctx, rng, ellipse(0, -62, 13, 12, rng), { fill: C.red, width: 2.4 });
+    dot(ctx, -4.5, -64, 1.8, INK);
+    dot(ctx, 4.5, -64, 1.8, INK);
+    ctx.save();
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(0, -59, 4, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+    ctx.restore();
+  },
+
+  bigOlive(ctx, rng) {
+    shadow(ctx, 30, 7);
+    line(ctx, rng, [[-4, 0], [4, -20], [-6, -40], [2, -58]], { stroke: C.grey, width: 9 });
+    line(ctx, rng, [[2, -36], [16, -52]], { stroke: C.grey, width: 5 });
+    const b = ellipse(0, -84, 60, 42, rng, 0.22, 26);
+    shape(ctx, rng, b, { fill: C.sage, stroke: C.deep, width: 2.4 });
+    scribble(ctx, rng, b, C.deep, { r: 5, spacing: 10, alpha: 0.45, width: 1.4 });
+    for (let i = 0; i < 16; i++) dot(ctx, (rng() - 0.5) * 90, -84 + (rng() - 0.5) * 60, 2.8, '#4b3a78');
   },
 
   pine(ctx, rng) {
@@ -276,7 +429,7 @@ const grow = (pts, cx, cy, k) => pts.map(([x, y]) => [cx + (x - cx) * k, cy + (y
 
 // ── Build ───────────────────────────────────────────────────
 
-export function buildWorld(places, res = 1) {
+export function buildWorld(places, curiosities = [], res = 1) {
   const rng = mulberry32(2026);
   const lands = ISLANDS.map((is) => ({ ...is, poly: islandPoly(is) }));
   const mainland = { name: 'Takamatsu', poly: mainlandPoly() };
@@ -307,13 +460,19 @@ export function buildWorld(places, res = 1) {
     keepClear.push({ x: p.x - 70, y: p.y, w: 140, h: 170 });
   }
 
-  // Landmarks
+  // Curiosities: little things to poke at and collect stamps from
+  for (const q of curiosities) {
+    const o = add(q.kind, q.x, q.y, q.color, q);
+    const s = o.sprite;
+    q.sprite = s;
+    q.door = { x: q.x, y: q.y + 22 };
+    q.bounds = { x: q.x - s.ax, y: q.y - s.ay, w: s.w, h: s.h };
+    q.topY = q.y - s.ay;
+    keepClear.push({ x: q.bounds.x - 20, y: q.bounds.y, w: q.bounds.w + 40, h: q.bounds.h + 50 });
+  }
+
   const spawn = { x: places[0]?.x ?? 1000, y: (places[0]?.y ?? 1385) + 90 };
   keepClear.push({ x: spawn.x - 80, y: spawn.y - 60, w: 160, h: 120 });
-  for (const [kind, x, y] of [['pumpkin', 575, 1040], ['lighthouse', 1130, 1352], ['torii', 1530, 990]]) {
-    const o = add(kind, x, y);
-    keepClear.push({ x: x - o.sprite.ax - 20, y: y - o.sprite.ay, w: o.sprite.w + 40, h: o.sprite.h + 40 });
-  }
 
   // Scenery
   const inRect = (x, y, r) => r && x > r.x && x < r.x + r.w && y > r.y && y < r.y + r.h;

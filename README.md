@@ -12,14 +12,25 @@ Each island holds one part of the portfolio. Visitors walk on land and row a boa
 | Inujima | old brick smelter | The Lab (experiments) |
 | Ogijima | ferry terminal with a letter-covered roof | Say hello (contact) |
 
-Shodoshima (olive groves and a torii) and Megijima are scenery for now.
+### Curiosities and the stamp book
+
+Little things are hidden around the islands. Walk up to one and press <kbd>E</kbd> (or tap it):
+it says something, does a little burst of hearts or sparkles, and adds a stamp to the
+**stamp book** (the pink *Stamps* button). They include the yellow and red pumpkins, the
+heartbeat hut, a friendly oni on Megijima, cats on Ogijima and at the port, a vending machine,
+the red lighthouse, a seaside torii and an old olive tree on Shodoshima.
+
+The **bike rental** kiosk on Naoshima rents you a bike: ride about 1.75× faster on land,
+take it with you in the boat, and return it at the kiosk. Seagulls fly overhead and a ferry
+runs the Takamatsu ↔ Naoshima route.
 
 It's plain HTML, CSS and JavaScript, with no build step and no dependencies.
 
 ## Editing the content
 
 Almost everything lives in **`js/content.js`**: your name, tagline, and each place's
-title, text and project cards. The `body` of each place is plain HTML.
+title, text and project cards. The `body` of each place is plain HTML. The `curiosities`
+list at the bottom holds the little things and what they say, so you can add, move or reword them.
 
 To add a project image, put the file in `assets/` and uncomment the `image` and `imageAlt`
 lines on a project card.
