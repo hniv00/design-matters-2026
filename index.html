@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Your Name · Portfolio</title>
+    <meta name="description" content="A portfolio you can explore: a hand-drawn trip around the art islands of the Seto Inland Sea." />
+    <meta property="og:title" content="Your Name · Portfolio" />
+    <meta property="og:description" content="A portfolio you can explore: a hand-drawn trip around the art islands of the Seto Inland Sea." />
+    <meta name="theme-color" content="#5ea6e2" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <!-- Rough crayon edge used by the UI borders -->
+    <svg class="defs" aria-hidden="true" focusable="false">
+      <filter id="crayon-edge">
+        <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="4" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="3.5" />
+      </filter>
+    </svg>
+
+    <header class="hud">
+      <a class="brand paper" href="./">
+        <span id="brand-name">Your Name</span>
+        <small id="brand-tagline"></small>
+      </a>
+      <div class="hud-right">
+        <span class="paper chip" id="progress" aria-live="polite"></span>
+        <details class="menu" id="menu">
+          <summary class="paper chip">Map</summary>
+          <ul class="paper" id="menu-list"></ul>
+        </details>
+      </div>
+    </header>
+
+    <main>
+      <canvas id="world" tabindex="0" aria-label="A hand-drawn map of islands. Use the arrow keys to walk, or the Map menu to visit each place."></canvas>
+      <p class="paper chip hint" id="hint">Arrow keys or WASD to walk · E to go inside · or click anywhere</p>
+      <p class="paper chip toast" id="toast" role="status" hidden>You found every island. Thanks for sailing by!</p>
+      <noscript>
+        <p class="paper noscript">This portfolio is a little explorable world and needs JavaScript to run.</p>
+      </noscript>
+    </main>
+
+    <dialog id="panel" aria-labelledby="panel-title">
+      <form method="dialog" class="close-form">
+        <button class="close" aria-label="Close">✕</button>
+      </form>
+      <p class="kicker" id="panel-kicker"></p>
+      <h2 id="panel-title"></h2>
+      <div id="panel-body"></div>
+    </dialog>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
