@@ -126,7 +126,7 @@ function renderBody(p) {
             <h3>${esc(pr.title)}</h3>
             ${meta ? `<p class="meta">${meta}</p>` : ''}
             <p>${esc(pr.description)}</p>
-            ${pr.link ? `<a href="${esc(pr.link)}" target="_blank" rel="noopener">See the project →</a>` : ''}
+            ${pr.link ? `<a href="${esc(pr.link)}" target="_blank" rel="noopener">Read the case study →</a>` : ''}
           </div>
         </article>`;
     }
