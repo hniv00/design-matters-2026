@@ -35,7 +35,7 @@ const FOOT = {
   sign: [90, 14], museum: [220, 44], drop: [220, 40], chimney: [150, 40], terminal: [96, 30],
   pumpkin: [64, 18], pine: [16, 10], olive: [14, 8], house: [60, 20], torii: [80, 10],
   lighthouse: [26, 14], redPumpkin: [76, 20], bikes: [96, 22], vending: [40, 12], cat: [18, 6],
-  heartHut: [86, 22], oni: [30, 12], bigOlive: [22, 10],
+  heartHut: [86, 22], oni: [30, 12], bigOlive: [22, 10], windmill: [70, 26], cave: [150, 34],
 };
 
 // Sprite canvas box: [width, height, anchorX, anchorY] — anchor is the front-centre base.
@@ -45,7 +45,8 @@ const BOX = {
   pine: [110, 125, 55, 112], olive: [90, 90, 45, 82], house: [90, 85, 45, 72], torii: [130, 120, 65, 106],
   lighthouse: [60, 150, 30, 136], ferry: [150, 90, 75, 70], redPumpkin: [120, 110, 60, 98],
   bikes: [200, 125, 100, 112], vending: [60, 100, 30, 90], cat: [60, 50, 28, 44], heartHut: [120, 105, 60, 94],
-  oni: [80, 95, 38, 86], bigOlive: [150, 145, 75, 132],
+  oni: [80, 95, 38, 86], bigOlive: [150, 145, 75, 132], windmill: [190, 210, 95, 196],
+  cave: [200, 120, 100, 104],
 };
 
 const shadow = (ctx, rx, ry) => {
@@ -329,6 +330,69 @@ const PAINT = {
     shape(ctx, rng, b, { fill: C.sage, stroke: C.deep, width: 2.4 });
     scribble(ctx, rng, b, C.deep, { r: 5, spacing: 10, alpha: 0.45, width: 1.4 });
     for (let i = 0; i < 16; i++) dot(ctx, (rng() - 0.5) * 90, -84 + (rng() - 0.5) * 60, 2.8, '#4b3a78');
+  },
+
+  // The white windmill of Shodoshima's olive park.
+  windmill(ctx, rng) {
+    shadow(ctx, 60, 10);
+    const tower = [[-34, 0], [34, 0], [26, -112], [-26, -112]];
+    shape(ctx, rng, tower, { fill: C.white, holes: 0.1 });
+    hatch(ctx, rng, tower, C.sky, { spacing: 12, alpha: 0.3 });
+    shape(ctx, rng, [[-32, -110], [0, -150], [32, -110]], { fill: C.pink });
+    shape(ctx, rng, rect(-12, -40, 24, 40), { fill: C.cobalt });
+    shape(ctx, rng, rect(-8, -86, 16, 18), { fill: C.sky, passes: 1 });
+    // Sails: four lattice blades around the hub
+    const hub = [0, -118];
+    for (let k = 0; k < 4; k++) {
+      const a = Math.PI / 4 + (k * Math.PI) / 2;
+      const ux = Math.cos(a);
+      const uy = Math.sin(a);
+      const px = -uy;
+      const py = ux;
+      const p0 = [hub[0] + ux * 10, hub[1] + uy * 10];
+      const p1 = [hub[0] + ux * 82, hub[1] + uy * 82];
+      const blade = [
+        [p0[0], p0[1]],
+        [p1[0], p1[1]],
+        [p1[0] + px * 16, p1[1] + py * 16],
+        [p0[0] + px * 12, p0[1] + py * 12],
+      ];
+      shape(ctx, rng, blade, { fill: C.sand, width: 2, passes: 1, amp: 1 });
+      for (let t = 0.25; t < 1; t += 0.25) {
+        const x = p0[0] + (p1[0] - p0[0]) * t;
+        const y = p0[1] + (p1[1] - p0[1]) * t;
+        line(ctx, rng, [[x, y], [x + px * 14, y + py * 14]], { width: 1.4, amp: 0.5 });
+      }
+      line(ctx, rng, [p0, p1], { stroke: C.bark, width: 3, amp: 0.8 });
+    }
+    dot(ctx, hub[0], hub[1], 5, INK);
+  },
+
+  // A rocky hill with the ogre cave in it.
+  cave(ctx, rng) {
+    shadow(ctx, 96, 12);
+    const hill = [];
+    for (let i = 0; i <= 22; i++) {
+      const a = Math.PI + (i / 22) * Math.PI;
+      hill.push([Math.cos(a) * 96, Math.sin(a) * (78 + Math.sin(i * 1.7) * 6)]);
+    }
+    shape(ctx, rng, hill, { fill: C.grey });
+    scribble(ctx, rng, hill, C.lavender, { r: 7, spacing: 14, alpha: 0.7 });
+    for (const [x, y, r] of [[-60, -22, 12], [58, -30, 14], [-30, -58, 10], [36, -62, 9]]) {
+      shape(ctx, rng, ellipse(x, y, r, r * 0.75, rng, 0.25), { fill: C.concrete, width: 2, passes: 1 });
+    }
+    const mouth = [];
+    for (let i = 0; i <= 14; i++) {
+      const a = Math.PI + (i / 14) * Math.PI;
+      mouth.push([Math.cos(a) * 30, Math.sin(a) * 44]);
+    }
+    shape(ctx, rng, mouth, { fill: INK, base: INK });
+    // two little glowing eyes in the dark
+    dot(ctx, -8, -24, 2.6, C.yellow);
+    dot(ctx, 8, -24, 2.6, C.yellow);
+    // a red rope with paper streamers over the entrance
+    line(ctx, rng, curve([-38, -40], [38, -40], -0.12, 10), { stroke: C.red, width: 4 });
+    for (const x of [-20, 0, 20]) line(ctx, rng, [[x, -45], [x - 2, -32]], { stroke: C.white, width: 3 });
   },
 
   pine(ctx, rng) {

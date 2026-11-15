@@ -1,4 +1,4 @@
-# Design Matters 2026: an island portfolio
+# Veronika Hniličková: an island portfolio
 
 A portfolio you can walk around in. Visitors play a little bird in a pink beanie hopping
 between the art islands of the Seto Inland Sea, drawn in an oil-pastel and gouache style.
@@ -6,10 +6,12 @@ Each island holds one part of the portfolio. Visitors walk on land and row a boa
 
 | Island | Building | Section |
 | --- | --- | --- |
-| Takamatsu Port | wooden sign | Welcome (where you start) |
-| Naoshima | concrete museum in a hill, plus the dotted pumpkin | Projects |
-| Teshima | white water-drop dome | About me |
-| Inujima | old brick smelter | The Lab (experiments) |
+| Takamatsu Port | wooden sign | Hello (intro and island guide; where you start) |
+| Naoshima | concrete museum in a hill | Latest projects |
+| Teshima | white water-drop dome | CV |
+| Inujima | old brick smelter | Talks & workshops (lectures, workshops, talks) |
+| Shodoshima | olive-park windmill | Leading teams |
+| Megijima | the ogre cave | Weird & wonderful (quirky facts) |
 | Ogijima | ferry terminal with a letter-covered roof | Say hello (contact) |
 
 ### Curiosities and the stamp book

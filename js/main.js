@@ -70,6 +70,7 @@ const gulls = [];
 
 // ── Chrome ──
 $('#brand-name').textContent = site.name;
+$('#brand-short').textContent = site.shortName || site.name;
 $('#brand-tagline').textContent = site.tagline;
 document.title = `${site.name} · ${site.tagline}`;
 
@@ -884,8 +885,9 @@ function draw(t) {
 
   bubble = null;
   if (near && !dialog.open && speech?.thing !== near) {
-    const head = toScreen(player.x, player.y - (player.onWater ? 60 : player.bike ? 74 : 56));
-    bubble = pill(ctx, promptFor(near), head.x, head.y - 6);
+    // Below the bird's feet, so the building being entered stays visible.
+    const feet = toScreen(player.x, player.y);
+    bubble = pill(ctx, promptFor(near), feet.x, feet.y + 14 + Math.round(34 * ui));
   }
 }
 

@@ -2,28 +2,36 @@
 //  ✏️  THIS IS THE FILE TO EDIT.
 //  Everything people read on the site lives here.
 //
-//  Each "place" is a spot in the world. Fields:
+//  Each "place" is one section of the portfolio, on its own island. Fields:
 //    id       unique, short, no spaces (used to remember visits)
-//    island   which island it's on (shown in the Map menu)
+//    island   which island it's on (shown in the Map menu and panel)
 //    kind     what gets drawn:
 //               sign      wooden welcome sign
 //               museum    low concrete museum in a hill
 //               drop      flat white water-drop dome
 //               chimney   brick smelter with chimneys
+//               windmill  white olive-park windmill
+//               cave      the ogre cave
 //               terminal  ferry terminal with a letter-covered roof
 //    x, y     where it stands (world is 2000 × 1620; y is the building's front edge).
 //             Keep it on the same island if you nudge it.
 //    color    accent colour for the panel
 //    title    shown above the building and as the panel heading
-//    body     HTML shown when you go inside
+//    body     HTML shown when you go inside. Handy building blocks:
+//               <ol class="timeline"> … </ol>   CV-style timeline
+//               <ul class="events"> … </ul>     talks / workshops list
+//               <ol class="facts"> … </ol>      big numbered fun facts
+//               <ul class="links"> … </ul>      chunky link buttons
 //    projects (optional) list of project cards, see Naoshima below
 //
-//  The first place in the list is where the visitor starts.
+//  The first place in the list is where the visitor starts, and the list
+//  order is the order of the Map menu.
 // ─────────────────────────────────────────────────────────────
 
 export const site = {
-  name: 'Your Name',
-  tagline: 'Designer & maker of small, bright things',
+  name: 'Veronika Hniličková',
+  shortName: 'Veronika', // shown on small phones, where the full name doesn't fit
+  tagline: 'Senior Product Designer & Experience Team Lead',
 };
 
 export const places = [
@@ -34,11 +42,20 @@ export const places = [
     x: 1000,
     y: 1385,
     color: '#f5a623',
-    title: 'Welcome!',
+    title: 'Hello!',
     body: `
-      <p>Hi, I'm <strong>Your Name</strong>. Welcome to my little archipelago.</p>
-      <p>This portfolio is a trip around the art islands of the Seto Inland Sea. Hop between
-         islands to see my work, get to know me, or send a hello from the ferry terminal.</p>
+      <p>Hi, I'm <strong>Veronika</strong>, a senior product designer and experience team lead.
+         Welcome to my little archipelago.</p>
+      <p>This portfolio is a trip around the art islands of the Seto Inland Sea.
+         Every island holds a different part of my story:</p>
+      <ul class="guide">
+        <li><strong>Naoshima</strong> · latest projects</li>
+        <li><strong>Teshima</strong> · CV</li>
+        <li><strong>Inujima</strong> · talks &amp; workshops</li>
+        <li><strong>Shodoshima</strong> · leading teams</li>
+        <li><strong>Megijima</strong> · weird &amp; wonderful</li>
+        <li><strong>Ogijima</strong> · say hello</li>
+      </ul>
       <ul class="controls for-touch">
         <li><strong>Tap</strong> or <strong>hold</strong> anywhere to walk (and row!)</li>
         <li><strong>Tap</strong> buildings to go in, and curious things to poke them</li>
@@ -47,9 +64,9 @@ export const places = [
         <li><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to walk (and row!)</li>
         <li><kbd>E</kbd> to go inside or poke things, or just click</li>
       </ul>
-      <p>Keep an eye out for little curiosities along the way. Poke them to fill your
+      <p>Keep an eye out for little curiosities along the way: poke them to fill your
          <strong>stamp book</strong>. And if your wings get tired, there's a bike rental on Naoshima.</p>
-      <p>In a hurry? The <strong>Map</strong> button up top takes you anywhere.</p>`,
+      <p>In a hurry? The <strong>Map</strong> button up top takes you straight to any island.</p>`,
   },
   {
     id: 'projects',
@@ -58,8 +75,8 @@ export const places = [
     x: 470,
     y: 900,
     color: '#f7d046',
-    title: 'Projects',
-    body: `<p>The museum. Some things I've made; click through for the full stories.</p>`,
+    title: 'Latest projects',
+    body: `<p>The museum. A few recent things I've designed and led. Click through for the full stories.</p>`,
     projects: [
       {
         title: 'Project one',
@@ -74,7 +91,7 @@ export const places = [
       {
         title: 'Project two',
         year: 2025,
-        tags: ['Branding'],
+        tags: ['Design system'],
         description: 'One or two lines on the problem and what you did about it.',
         link: '#',
         color: '#a5a0f2',
@@ -82,7 +99,7 @@ export const places = [
       {
         title: 'Project three',
         year: 2024,
-        tags: ['Illustration', 'Motion'],
+        tags: ['Service design', 'Workshops'],
         description: 'One or two lines on the problem and what you did about it.',
         link: '#',
         color: '#86c9ee',
@@ -90,38 +107,86 @@ export const places = [
     ],
   },
   {
-    id: 'about',
+    id: 'cv',
     island: 'Teshima',
     kind: 'drop',
     x: 1030,
     y: 520,
     color: '#86c9ee',
-    title: 'About me',
+    title: 'CV',
     body: `
-      <p>A few sentences about who you are, what you love making, and what you're looking for next.</p>
-      <p>Maybe a fun fact. Maybe your favourite island.</p>
-      <h3>Things I'm good at</h3>
-      <ul>
-        <li>Skill one</li>
-        <li>Skill two</li>
-        <li>Skill three</li>
+      <p>Like Teshima's rice terraces: one step at a time, each a little higher than the last.</p>
+      <h3>Experience</h3>
+      <ol class="timeline">
+        <li><span class="when">20XX – now</span><strong>Senior Product Designer &amp; Experience Team Lead</strong>Company · a line on what you lead and own</li>
+        <li><span class="when">20XX – 20XX</span><strong>Product Designer</strong>Company · a line on what you did</li>
+        <li><span class="when">20XX – 20XX</span><strong>Role</strong>Company · a line on what you did</li>
+      </ol>
+      <h3>Education</h3>
+      <ol class="timeline">
+        <li><span class="when">20XX – 20XX</span><strong>Degree</strong>University</li>
+      </ol>
+      <h3>Toolbox</h3>
+      <ul class="pills">
+        <li>Product strategy</li><li>UX research</li><li>Design systems</li><li>Facilitation</li><li>Prototyping</li><li>Team leadership</li>
+      </ul>
+      <ul class="links">
+        <li><a href="#" target="_blank" rel="noopener">Download CV (PDF)</a></li>
       </ul>`,
   },
   {
-    id: 'lab',
+    id: 'talks',
     island: 'Inujima',
     kind: 'chimney',
     x: 1585,
     y: 275,
     color: '#f2552c',
-    title: 'The Lab',
+    title: 'Talks & workshops',
     body: `
-      <p>An old smelter turned workshop. This is where experiments live: side projects, sketches,
-         half-finished ideas and things I'm learning.</p>
+      <p>An old copper smelter turned art space, and the place where I share what I've learned:
+         university lectures, workshops and talks.</p>
+      <ul class="events">
+        <li><span class="tag">Lecture</span><strong>Lecture title</strong><small>University · 2026</small></li>
+        <li><span class="tag">Workshop</span><strong>Workshop title</strong><small>Event or company · 2025</small></li>
+        <li><span class="tag">Talk</span><strong>Talk title</strong><small>Conference · 2025</small></li>
+      </ul>
+      <p>Want me to speak or run a workshop with your team? Sail over to <strong>Ogijima</strong> and say hello.</p>`,
+  },
+  {
+    id: 'teams',
+    island: 'Shodoshima',
+    kind: 'windmill',
+    x: 1620,
+    y: 820,
+    color: '#62b86e',
+    title: 'Leading teams',
+    body: `
+      <p>Shodoshima's olive groves take patience, good soil and plenty of sun. Teams do too.</p>
+      <h3>How I lead</h3>
       <ul>
-        <li><strong>Experiment</strong>: a sentence about it</li>
-        <li><strong>Another one</strong>: a sentence about it</li>
-      </ul>`,
+        <li><strong>A principle</strong>: a sentence on what it looks like in practice</li>
+        <li><strong>Another principle</strong>: a sentence on what it looks like in practice</li>
+        <li><strong>One more</strong>: a sentence on what it looks like in practice</li>
+      </ul>
+      <h3>What my team says</h3>
+      <blockquote>“A short quote from someone you've worked with.”<cite>Name, role</cite></blockquote>`,
+  },
+  {
+    id: 'quirky',
+    island: 'Megijima',
+    kind: 'cave',
+    x: 870,
+    y: 1088,
+    color: '#a5a0f2',
+    title: 'Weird & wonderful',
+    body: `
+      <p>Megijima is said to be the island of ogres from the tale of Momotarō. Its cave is where
+         the oddities live. Things you didn't ask to know about me:</p>
+      <ol class="facts">
+        <li>Something delightfully strange about you.</li>
+        <li>A hobby nobody expects.</li>
+        <li>An unpopular opinion you'll defend forever.</li>
+      </ol>`,
   },
   {
     id: 'contact',
@@ -132,12 +197,11 @@ export const places = [
     color: '#ef5a98',
     title: 'Say hello',
     body: `
-      <p>Ferries leave every hour, and so do my replies. Want to work together, or just say hi?</p>
+      <p>Ferries leave every hour, and so do my replies. Want to work together, invite me to give a talk,
+         or just say hi?</p>
       <ul class="links">
         <li><a href="mailto:you@example.com">Email</a></li>
         <li><a href="https://www.linkedin.com/" target="_blank" rel="noopener">LinkedIn</a></li>
-        <li><a href="https://dribbble.com/" target="_blank" rel="noopener">Dribbble</a></li>
-        <li><a href="https://github.com/" target="_blank" rel="noopener">GitHub</a></li>
       </ul>`,
   },
 ];
@@ -200,8 +264,8 @@ export const curiosities = [
     id: 'oni',
     kind: 'oni',
     island: 'Megijima',
-    x: 885,
-    y: 1105,
+    x: 962,
+    y: 1098,
     name: 'Friendly oni',
     lines: ['Megijima is said to be the ogre island from the tale of Momotarō.', 'This ogre just waves. You wave back.'],
   },
@@ -262,8 +326,8 @@ export const curiosities = [
     id: 'old-olive',
     kind: 'bigOlive',
     island: 'Shodoshima',
-    x: 1720,
-    y: 760,
+    x: 1810,
+    y: 880,
     name: 'Old olive tree',
     lines: ['Shodoshima is famous for its olives. This tree must be ancient.', 'You find a heart-shaped leaf. Lucky!'],
   },
