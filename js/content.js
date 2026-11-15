@@ -146,19 +146,51 @@ export const places = [
     title: 'CV',
     body: `
       <p>Like Teshima's rice terraces: one step at a time, each a little higher than the last.</p>
+      <p>I'm a senior product designer and experience team lead. I bring design foundations and
+         evidence-based practice to complex products, from enterprise analytics and national eGov
+         services to banking and accessible consumer apps.</p>
       <h3>Experience</h3>
       <ol class="timeline">
-        <li><span class="when">20XX – now</span><strong>Senior Product Designer &amp; Experience Team Lead</strong>Company · a line on what you lead and own</li>
-        <li><span class="when">20XX – 20XX</span><strong>Product Designer</strong>Company · a line on what you did</li>
-        <li><span class="when">20XX – 20XX</span><strong>Role</strong>Company · a line on what you did</li>
+        <li>
+          <span class="when">20XX – now</span>
+          <strong>Senior Product Designer &amp; Experience Team Lead</strong>
+          [Company] · leading UX on client programmes, from discovery to design systems
+          <ul>
+            <li><strong>Ad-intelligence analytics platform</strong> (Oct 2025 – Jul 2026): product diagnostic,
+                structured research, and the platform's first design system and DesignOps practice</li>
+            <li><strong>National eGov justice portal</strong> (Oct 2024 – Sep 2025): UX architecture for
+                multi-role digital courts in a multi-vendor programme, with a right-to-left design system</li>
+          </ul>
+        </li>
+        <li>
+          <span class="when">2022 – 2024</span>
+          <strong>Web UX Designer, Nordic challenger bank</strong>
+          The bank's first dedicated web UX designer, across three Nordic markets
+          <ul>
+            <li>Built its first web design system, later cloned to launch an acquired brand</li>
+            <li>Ran its first A/B tests and made test-before-ship the norm</li>
+            <li>Unified two portals into one online bank and launched self-service mortgage onboarding</li>
+            <li>Turned an accessibility audit into a standing backlog and designed a 60+ sub-brand</li>
+          </ul>
+        </li>
       </ol>
       <h3>Education</h3>
       <ol class="timeline">
-        <li><span class="when">20XX – 20XX</span><strong>Degree</strong>University</li>
+        <li>
+          <span class="when">20XX – 2023</span>
+          <strong>[Degree], [University]</strong>
+          Thesis projects:
+          <ul>
+            <li><strong>Mingly</strong> (2023): research-led rebrand and accessible redesign of a dating platform for people with disabilities</li>
+            <li><strong>Booxy</strong> (2020 – 2021): research-led redesign of a Czech book-tracking app with 10k+ users</li>
+          </ul>
+        </li>
       </ol>
       <h3>Toolbox</h3>
       <ul class="pills">
-        <li>Product strategy</li><li>UX research</li><li>Design systems</li><li>Facilitation</li><li>Prototyping</li><li>Team leadership</li>
+        <li>Product strategy</li><li>UX research</li><li>Design systems</li><li>DesignOps</li>
+        <li>Service design</li><li>Accessibility (WCAG 2.2)</li><li>A/B testing</li><li>Usability testing</li>
+        <li>RTL design</li><li>Stakeholder alignment</li>
       </ul>
       <ul class="links">
         <li><a href="#" target="_blank" rel="noopener">Download CV (PDF)</a></li>
@@ -191,13 +223,23 @@ export const places = [
     color: '#62b86e',
     title: 'Leading teams',
     body: `
-      <p>Shodoshima's olive groves take patience, good soil and plenty of sun. Teams do too.</p>
+      <p>Shodoshima's olive groves take patience, good soil and plenty of sun. Teams do too.
+         Here's what I bring to the people I work with, and the evidence behind it.</p>
       <h3>How I lead</h3>
-      <ul>
-        <li><strong>A principle</strong>: a sentence on what it looks like in practice</li>
-        <li><strong>Another principle</strong>: a sentence on what it looks like in practice</li>
-        <li><strong>One more</strong>: a sentence on what it looks like in practice</li>
-      </ul>
+      <ol class="facts">
+        <li><strong>Evidence over assumptions.</strong> I replace opinion-driven decisions with research:
+            interviews, surveys and analytics that feed the roadmap.</li>
+        <li><strong>Test before we ship.</strong> Prototype tests, concept tests and A/B tests come before code,
+            so we build the right thing first time.</li>
+        <li><strong>Speak the business's language.</strong> I translate UX insight into why it matters,
+            not just what the problem is, and argue from data rather than taste.</li>
+        <li><strong>Make the logic visible.</strong> Shared research folders, service blueprints and
+            system-and-journey maps help everyone, across teams and vendors, see the same picture.</li>
+        <li><strong>Accessibility from day one.</strong> It isn't a layer added at the end; it's a mindset
+            that makes the product better for everyone.</li>
+        <li><strong>Foundations that outlast me.</strong> Design systems and DesignOps workflows that
+            engineering keeps using long after handover.</li>
+      </ol>
       <h3>What my team says</h3>
       <blockquote>“A short quote from someone you've worked with.”<cite>Name, role</cite></blockquote>`,
   },

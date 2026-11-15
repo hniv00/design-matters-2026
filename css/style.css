@@ -390,6 +390,11 @@ kbd {
 }
 .timeline .when { display: block; font-family: var(--font-hand); font-weight: 700; font-size: 1.05rem; color: var(--cobalt); }
 .timeline strong { display: block; }
+.timeline ul { margin: 6px 0 0; padding-left: 18px; }
+.timeline ul li { margin: 0 0 6px; }
+.timeline ul li::before { content: none; }
+.timeline ul strong { display: inline; }
+.facts li strong { display: block; font-family: var(--font-hand); font-size: 1.25rem; line-height: 1.2; }
 
 .pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 0.5rem 0 1rem; padding: 0; list-style: none; }
 .pills li {
