@@ -12,6 +12,7 @@ const panelBody = $('#panel-body');
 const hint = $('#hint');
 const progressEl = $('#progress');
 const stampsBtn = $('#stamps');
+const stampsCount = $('#stamps-count');
 const menu = $('#menu');
 const menuList = $('#menu-list');
 const toast = $('#toast');
@@ -21,9 +22,8 @@ const SPEED = 250;
 const BIKE_BOOST = 1.75;
 const RADIUS = 12;
 const REACH = 64;
-const LABEL_FONT = '700 26px Gaegu, "Comic Sans MS", cursive';
-const BUBBLE_FONT = '700 20px Gaegu, "Comic Sans MS", cursive';
-const SPEECH_FONT = '700 19px Gaegu, "Comic Sans MS", cursive';
+const HAND = 'Gaegu, "Comic Sans MS", cursive';
+const LABEL_FONT = `700 26px ${HAND}`;
 
 const things = [...places, ...curiosities];
 const isPlace = (t) => places.includes(t);
@@ -63,6 +63,8 @@ let side = 1;
 let bestDist = Infinity;
 let touchy = matchMedia('(pointer: coarse)').matches;
 let pendingToast = null;
+let ui = 1; // on-screen text scale (bigger on large screens)
+const pointer = { down: false, id: null, x: 0, y: 0 };
 const particles = [];
 const gulls = [];
 
@@ -91,7 +93,9 @@ function renderMenu() {
     menuList.append(li);
   }
   progressEl.textContent = `${countOf(places)}/${places.length} found`;
-  stampsBtn.textContent = `Stamps ${countOf(curiosities)}/${curiosities.length}`;
+  const got = countOf(curiosities);
+  stampsCount.textContent = `${got}/${curiosities.length}`;
+  stampsBtn.setAttribute('aria-label', `Stamp book: ${got} of ${curiosities.length} stamps collected`);
 }
 
 document.addEventListener('pointerdown', (e) => {
@@ -178,8 +182,9 @@ function openStamps() {
   showPanel(
     'Collected on your travels',
     'Stamp book',
-    `<p>Little things are hidden all over the islands. Walk up to anything curious and press <kbd>E</kbd>
-       (or tap it) to collect its stamp. <strong>${got} of ${curiosities.length}</strong> so far.</p>
+    `<p>Little things are hidden all over the islands.
+       <span class="for-touch">Tap anything curious</span><span class="for-keys">Walk up to anything curious and press <kbd>E</kbd></span>
+       to collect its stamp. <strong>${got} of ${curiosities.length}</strong> so far.</p>
      <ul class="stamps">${items}</ul>`,
     C.pink,
   );
@@ -228,6 +233,9 @@ function poke(q) {
   speech = { thing: q, text, until: clock + 3 + text.length * 0.045 };
   burst(q.x, q.topY + 20, q.burst || 'sparkles');
   if (collect(q.id)) {
+    try {
+      navigator.vibrate?.(18);
+    } catch {}
     stampsBtn.classList.remove('bump');
     void stampsBtn.offsetWidth;
     stampsBtn.classList.add('bump');
@@ -267,23 +275,66 @@ addEventListener('keyup', (e) => {
 addEventListener('blur', () => keys.clear());
 
 const toWorld = (cx, cy) => ({ x: cx / zoom + cam.x, y: cy / zoom + cam.y });
+const toScreen = (x, y) => ({ x: (x - cam.x) * zoom, y: (y - cam.y) * zoom });
 const inBox = (pt, b, pad = 0) => b && pt.x > b.x - pad && pt.x < b.x + b.w + pad && pt.y > b.y - pad && pt.y < b.y + b.h + pad;
 
+// Tap a thing to walk over and use it; tap or hold anywhere else to walk there
+// (while held, the bird keeps following your finger).
 canvas.addEventListener('pointerdown', (e) => {
   touchy = e.pointerType !== 'mouse';
   canvas.focus({ preventScroll: true });
+  const screen = { x: e.clientX, y: e.clientY };
+  if (near && inBox(screen, bubble, 14)) return interact(near);
   const pt = toWorld(e.clientX, e.clientY);
-  if (near && inBox(pt, bubble, 14)) return interact(near);
-  const hit = things.filter((t) => inBox(pt, t.bounds)).sort((a, b) => b.y - a.y)[0];
+  const pad = touchy ? 14 / zoom : 0;
+  const hit = things.filter((t) => inBox(pt, t.bounds, pad)).sort((a, b) => b.y - a.y)[0];
   bestDist = Infinity;
   if (hit) {
     if (hit === near) return interact(hit);
     target = { ...hit.door };
     autoUse = hit;
-  } else {
-    target = pt;
-    autoUse = null;
+    return;
   }
+  target = pt;
+  autoUse = null;
+  Object.assign(pointer, { down: true, id: e.pointerId, x: e.clientX, y: e.clientY });
+  try {
+    canvas.setPointerCapture(e.pointerId);
+  } catch {}
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (pointer.down && e.pointerId === pointer.id) Object.assign(pointer, { x: e.clientX, y: e.clientY });
+});
+const release = (e) => {
+  if (e.pointerId === pointer.id) pointer.down = false;
+};
+canvas.addEventListener('pointerup', release);
+canvas.addEventListener('pointercancel', release);
+
+// Swipe the bottom sheet down to close it.
+const sheetMode = matchMedia('(max-width: 639px)');
+let drag = null;
+dialog.addEventListener('touchstart', (e) => {
+  if (!sheetMode.matches || dialog.scrollTop > 0 || e.touches.length !== 1) return;
+  drag = { y: e.touches[0].clientY, dy: 0 };
+}, { passive: true });
+dialog.addEventListener('touchmove', (e) => {
+  if (!drag) return;
+  drag.dy = Math.max(0, e.touches[0].clientY - drag.y);
+  if (drag.dy > 0 && dialog.scrollTop <= 0) {
+    dialog.classList.add('dragging');
+    dialog.style.transform = `translateY(${drag.dy}px)`;
+  }
+}, { passive: true });
+dialog.addEventListener('touchend', () => {
+  if (!drag) return;
+  const close = drag.dy > 90;
+  drag = null;
+  dialog.classList.remove('dragging');
+  dialog.classList.add('settle');
+  dialog.style.transform = '';
+  setTimeout(() => dialog.classList.remove('settle'), 220);
+  if (close) dialog.close();
 });
 
 // ── Simulation ──
@@ -369,6 +420,11 @@ function updatePlayer(dt) {
 }
 
 function update(dt) {
+  if (pointer.down) {
+    target = toWorld(pointer.x, pointer.y);
+    autoUse = null;
+    bestDist = Infinity;
+  }
   updatePlayer(dt);
   player.onWater = !world.isLand(player.x, player.y);
 
@@ -450,7 +506,8 @@ function resize() {
   canvas.height = Math.round(vh * dpr);
   canvas.style.width = `${vw}px`;
   canvas.style.height = `${vh}px`;
-  zoom = Math.max(0.62, Math.min(1.25, Math.min(vw / 1050, vh / 800)));
+  zoom = Math.max(0.72, Math.min(1.25, Math.min(vw / 900, vh / 760)));
+  ui = vw >= 720 ? 1.15 : 1;
 }
 addEventListener('resize', () => {
   resize();
@@ -684,14 +741,15 @@ function wrap(c, text, maxW) {
 }
 
 function drawSpeech(c, s) {
-  c.font = SPEECH_FONT;
-  const lines = wrap(c, s.text, 230);
-  const lh = 22;
+  c.font = `700 ${Math.round(17 * ui)}px ${HAND}`;
+  const lh = Math.round(21 * ui);
+  const lines = wrap(c, s.text, Math.min(260 * ui, vw - 56));
   const w = Math.max(...lines.map((l) => c.measureText(l).width)) + 28;
   const h = lines.length * lh + 18;
-  const x = Math.max(cam.x + 8, Math.min(s.thing.x - w / 2, cam.x + vw / zoom - w - 8));
-  const y = Math.max(cam.y + 70, s.thing.topY - h - 18);
-  const tipX = Math.max(x + 18, Math.min(s.thing.x, x + w - 18));
+  const anchor = toScreen(s.thing.x, s.thing.topY);
+  const x = Math.max(12, Math.min(anchor.x - w / 2, vw - w - 12));
+  const y = Math.max(64, anchor.y - h - 16);
+  const tipX = Math.max(x + 18, Math.min(anchor.x, x + w - 18));
   c.save();
   c.beginPath();
   c.roundRect(x, y, w, h, 16);
@@ -716,11 +774,11 @@ function drawSpeech(c, s) {
   c.restore();
 }
 
-function pill(c, text, x, y, font) {
-  c.font = font;
-  const w = c.measureText(text).width + 22;
-  const h = 30;
-  const bx = x - w / 2;
+function pill(c, text, x, y) {
+  c.font = `700 ${Math.round(17 * ui)}px ${HAND}`;
+  const w = c.measureText(text).width + 24;
+  const h = Math.round(34 * ui);
+  const bx = Math.max(8, Math.min(x - w / 2, vw - w - 8));
   const by = y - h;
   c.beginPath();
   c.roundRect(bx, by, w, h, 12);
@@ -732,13 +790,16 @@ function pill(c, text, x, y, font) {
   c.fillStyle = INK;
   c.textAlign = 'center';
   c.textBaseline = 'middle';
-  c.fillText(text, x, by + h / 2 + 1);
+  c.fillText(text, bx + w / 2, by + h / 2 + 1);
   return { x: bx, y: by, w, h };
 }
 
 function promptFor(t) {
   const key = touchy ? 'Tap' : 'E';
-  if (isPlace(t)) return touchy ? `Tap to enter ${t.title}` : `Press E · ${t.title}`;
+  if (isPlace(t)) {
+    const verb = t.kind === 'sign' ? 'read' : 'enter';
+    return touchy ? `Tap to ${verb} ${t.title}` : `Press E · ${t.title}`;
+  }
   if (t.action === 'bike') return `${key} · ${player.bike ? 'Return the bike' : 'Rent a bike'}`;
   return `${key} · ${t.name}`;
 }
@@ -781,24 +842,6 @@ function draw(t) {
     }
   }
 
-  // Place labels
-  ctx.font = LABEL_FONT;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'alphabetic';
-  ctx.lineJoin = 'round';
-  for (const p of places) {
-    ctx.lineWidth = 7;
-    ctx.strokeStyle = C.white;
-    ctx.strokeText(p.title, p.x, p.labelY);
-    ctx.fillStyle = INK;
-    ctx.fillText(p.title, p.x, p.labelY);
-    if (!visited.has(p.id)) {
-      const w = ctx.measureText(p.title).width;
-      const pulse = reduced ? 1 : 1 + Math.sin(t * 4) * 0.2;
-      sparkle(ctx, p.x + w / 2 + 14, p.labelY - 18, 8 * pulse);
-    }
-  }
-
   for (const g of gulls) drawGull(ctx, g, t);
 
   for (const p of particles) {
@@ -816,11 +859,33 @@ function draw(t) {
   }
   ctx.globalAlpha = 1;
 
+  // Overlays are drawn in screen space so text stays the same size at any zoom.
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.font = `700 ${Math.round(19 * ui)}px ${HAND}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.lineJoin = 'round';
+  for (const p of places) {
+    const sp = toScreen(p.x, p.labelY);
+    if (sp.x < -100 || sp.x > vw + 100 || sp.y < -20 || sp.y > vh + 40) continue;
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = C.white;
+    ctx.strokeText(p.title, sp.x, sp.y);
+    ctx.fillStyle = INK;
+    ctx.fillText(p.title, sp.x, sp.y);
+    if (!visited.has(p.id)) {
+      const w = ctx.measureText(p.title).width;
+      const pulse = reduced ? 1 : 1 + Math.sin(t * 4) * 0.2;
+      sparkle(ctx, sp.x + w / 2 + 12, sp.y - 13 * ui, 6.5 * ui * pulse);
+    }
+  }
+
   if (speech) drawSpeech(ctx, speech);
 
   bubble = null;
   if (near && !dialog.open && speech?.thing !== near) {
-    bubble = pill(ctx, promptFor(near), player.x, player.y - (player.onWater ? 78 : player.bike ? 96 : 70), BUBBLE_FONT);
+    const head = toScreen(player.x, player.y - (player.onWater ? 60 : player.bike ? 74 : 56));
+    bubble = pill(ctx, promptFor(near), head.x, head.y - 6);
   }
 }
 
@@ -852,7 +917,6 @@ async function start() {
   }
   snapCamera();
   renderMenu();
-  if (touchy) hint.textContent = 'Tap anywhere to walk · tap things to poke them';
   requestAnimationFrame(loop);
   if (!visited.has(places[0].id)) openPlace(places[0]);
 }

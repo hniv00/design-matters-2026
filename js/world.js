@@ -9,7 +9,7 @@ import {
   drawBike, heartPath,
 } from './sketch.js';
 
-export const WORLD = { w: 2000, h: 1500 };
+export const WORLD = { w: 2000, h: 1620 };
 
 // Loosely following the real map (north is up). Takamatsu is the mainland port.
 export const ISLANDS = [
@@ -497,9 +497,9 @@ export function buildWorld(places, curiosities = [], res = 1) {
   scatter(byName.Megijima, 'pine', 4, 50);
   scatter(byName.Ogijima, 'house', 4, 55);
   scatter(byName.Ogijima, 'pine', 2, 50);
-  const coast = { ...mainland, x: 1000, y: 1420, rx: 1000, ry: 80 };
-  scatter(coast, 'house', 7, 90);
-  scatter(coast, 'pine', 8, 70);
+  const coast = { ...mainland, x: 1000, y: 1470, rx: 1000, ry: 140 };
+  scatter(coast, 'house', 9, 90);
+  scatter(coast, 'pine', 12, 70);
 
   // Ferry on the Naoshima route
   const route = curve(...FERRY_ROUTES[0].slice(0, 2), FERRY_ROUTES[0][2], 60).slice(14, -6);

@@ -3,12 +3,18 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Islands" />
     <title>Your Name · Portfolio</title>
     <meta name="description" content="A portfolio you can explore: a hand-drawn trip around the art islands of the Seto Inland Sea." />
     <meta property="og:title" content="Your Name · Portfolio" />
     <meta property="og:description" content="A portfolio you can explore: a hand-drawn trip around the art islands of the Seto Inland Sea." />
     <meta name="theme-color" content="#5ea6e2" />
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="assets/icon-180.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet" />
@@ -30,7 +36,11 @@
       </a>
       <div class="hud-right">
         <span class="paper chip progress" id="progress" aria-live="polite"></span>
-        <button type="button" class="paper chip stamps-btn" id="stamps" aria-live="polite">Stamps</button>
+        <button type="button" class="paper chip stamps-btn" id="stamps" aria-label="Stamp book">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="#fbf8f3" stroke="#ef5a98" stroke-width="2.4" stroke-dasharray="3 2.4"/><path d="M8 13.5l2.6 2.5L16 9" fill="none" stroke="#1d1b1e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="label">Stamps</span>
+          <span class="count" id="stamps-count" aria-live="polite"></span>
+        </button>
         <details class="menu" id="menu">
           <summary class="paper chip">Map</summary>
           <ul class="paper" id="menu-list"></ul>
@@ -40,7 +50,10 @@
 
     <main>
       <canvas id="world" tabindex="0" aria-label="A hand-drawn map of islands. Use the arrow keys to walk, or the Map menu to visit each place."></canvas>
-      <p class="paper chip hint" id="hint">Arrow keys or WASD to walk · E to go in or poke things · or click anywhere</p>
+      <p class="paper chip hint" id="hint">
+        <span class="for-touch">Tap or hold anywhere to walk · tap things to poke them</span>
+        <span class="for-keys">Arrow keys or WASD to walk · E to go in or poke things · or click anywhere</span>
+      </p>
       <p class="paper chip toast" id="toast" role="status" hidden>You found every island. Thanks for sailing by!</p>
       <noscript>
         <p class="paper noscript">This portfolio is a little explorable world and needs JavaScript to run.</p>
@@ -48,11 +61,12 @@
     </main>
 
     <dialog id="panel" aria-labelledby="panel-title">
+      <div class="sheet-handle" aria-hidden="true"></div>
       <form method="dialog" class="close-form">
         <button class="close" aria-label="Close">✕</button>
       </form>
       <p class="kicker" id="panel-kicker"></p>
-      <h2 id="panel-title"></h2>
+      <h2 id="panel-title" tabindex="-1" autofocus></h2>
       <div id="panel-body"></div>
     </dialog>
 

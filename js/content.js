@@ -11,7 +11,7 @@
 //               drop      flat white water-drop dome
 //               chimney   brick smelter with chimneys
 //               terminal  ferry terminal with a letter-covered roof
-//    x, y     where it stands (world is 2000 × 1500; y is the building's front edge).
+//    x, y     where it stands (world is 2000 × 1620; y is the building's front edge).
 //             Keep it on the same island if you nudge it.
 //    color    accent colour for the panel
 //    title    shown above the building and as the panel heading
@@ -39,10 +39,13 @@ export const places = [
       <p>Hi, I'm <strong>Your Name</strong>. Welcome to my little archipelago.</p>
       <p>This portfolio is a trip around the art islands of the Seto Inland Sea. Hop between
          islands to see my work, get to know me, or send a hello from the ferry terminal.</p>
-      <ul class="controls">
+      <ul class="controls for-touch">
+        <li><strong>Tap</strong> or <strong>hold</strong> anywhere to walk (and row!)</li>
+        <li><strong>Tap</strong> buildings to go in, and curious things to poke them</li>
+      </ul>
+      <ul class="controls for-keys">
         <li><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> or <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> to walk (and row!)</li>
-        <li><kbd>E</kbd> to go inside</li>
-        <li>On a phone? Tap where you want to go.</li>
+        <li><kbd>E</kbd> to go inside or poke things, or just click</li>
       </ul>
       <p>Keep an eye out for little curiosities along the way. Poke them to fill your
          <strong>stamp book</strong>. And if your wings get tired, there's a bike rental on Naoshima.</p>

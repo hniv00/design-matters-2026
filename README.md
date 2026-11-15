@@ -35,6 +35,22 @@ list at the bottom holds the little things and what they say, so you can add, mo
 To add a project image, put the file in `assets/` and uncomment the `image` and `imageAlt`
 lines on a project card.
 
+## Mobile-first
+
+Phones are the main target. The CSS base styles are for phones, and larger screens are layered on with
+`min-width` and `(hover: hover) and (pointer: fine)` media queries.
+
+- **Touch controls:** tap to walk, or **hold** and the bird follows your finger. Tap a building or
+  curiosity to walk over and use it. Tap targets have extra padding.
+- **Panels** open as a **bottom sheet** on phones (swipe down to close) and as a centered card on wider screens.
+- **In-world text** (labels, prompts, speech bubbles) is drawn at a fixed on-screen size, so it stays
+  readable however far the map is zoomed out.
+- Instructions switch between touch and keyboard wording (`.for-touch` / `.for-keys` in `content.js`).
+- The page respects safe areas (notches, home indicator), blocks pull-to-refresh and double-tap zoom on the
+  map, and gives a small vibration when you collect a stamp on Android.
+- It can be added to the home screen as an app (`manifest.webmanifest` plus icons in `assets/`). Update
+  the `name` in the manifest when you put in your own name.
+
 ## Running it locally
 
 The JavaScript uses ES modules, so it needs a local server (opening the file directly won't work):
